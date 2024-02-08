@@ -9,6 +9,7 @@ import 'application/repository/repository.dart';
 import 'controllers/bank_statement_controller.dart';
 import 'controllers/transaction_controller.dart';
 import 'infra/datasources/in_memory/in_memory_data_sources.dart';
+import 'infra/datasources/pg_db/pg_connection.dart';
 import 'infra/utils/registry.dart';
 import 'infra/utils/routes.dart';
 
@@ -39,6 +40,9 @@ init() {
 }
 
 initDependencies() {
+  // infra
+  // var pgConnection = PgConnection();
+
   // repositories
   var transactionRepository = InMemoryTransactionRepository();
   var userRepository = InMemoryUserRepository();
@@ -78,4 +82,7 @@ initDependencies() {
   Registry().register<BankStatementController>(
     bankStatementController,
   );
+  // Registry().register<PgConnection>(
+  //   pgConnection,
+  // );
 }
