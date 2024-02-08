@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 
 import '../application/create_transaction_usecase.dart';
-import '../infra/exceptions/user_not_found_exception.dart';
+import '../application/exceptions/bussines_exceptions.dart';
 
 class TransactionController {
   final CreateTransactionUseCase createTransaction;

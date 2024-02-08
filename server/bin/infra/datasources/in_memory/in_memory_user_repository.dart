@@ -1,6 +1,7 @@
-import '../../domain/user.dart';
+import '../../../application/repository/repository.dart';
+import '../../../domain/user.dart';
 
-class UserRepository {
+class InMemoryUserRepository implements UserRepository {
   final Map<int, User> _table = {
     1: User(id: 1, limit: 100000, balance: 0),
     2: User(id: 2, limit: 80000, balance: 0),
@@ -9,10 +10,12 @@ class UserRepository {
     5: User(id: 5, limit: 500000, balance: 0),
   };
 
+  @override
   Future<User?> findById(int id) async {
     return _table[id];
   }
 
+  @override
   Future updateBalance(int id, int nextBalance) async {
     if (!_table.containsKey(id)) {
       throw Exception('Usuário não encontrado');

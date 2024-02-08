@@ -1,7 +1,7 @@
 import '../domain/transaction.dart';
-import '../infra/datasources/transaction_repository.dart';
-import '../infra/datasources/user_repository.dart';
-import '../infra/exceptions/user_not_found_exception.dart';
+
+import 'exceptions/user_not_found_exception.dart';
+import './repository/repository.dart';
 
 class FindBankStatementByUserUseCase {
   final TransactionRepository repository;
