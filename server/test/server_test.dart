@@ -23,6 +23,6 @@ void main() {
   test('Root', () async {
     final response = await get(Uri.parse('$host/clientes/<id>/extrato'));
     expect(response.statusCode, 200);
-    expect(response.body, 'Hello, World!\n');
+    expect(response.body, '');
   });
 }

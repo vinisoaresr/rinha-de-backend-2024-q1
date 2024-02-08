@@ -1,18 +1,21 @@
 enum TransactionType { credit, debit }
 
-abstract class Transaction {
+class Transaction {
+  int id;
+
   /// In cents
   int value;
   String description;
+  int userId;
   DateTime realizedAt;
   TransactionType type;
 
-  Transaction(this.value, this.description, this.realizedAt, this.type);
-
-  fromJson(Map<String, dynamic> json) {
-    value = json['value'];
-    description = json['description'];
-    realizedAt = DateTime.now();
-    type = json['type'] == 'c' ? TransactionType.credit : TransactionType.debit;
-  }
+  Transaction({
+    required this.id,
+    required this.userId,
+    required this.value,
+    required this.description,
+    required this.realizedAt,
+    required this.type,
+  });
 }

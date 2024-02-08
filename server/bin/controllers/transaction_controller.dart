@@ -2,12 +2,27 @@ import 'dart:convert';
 
 import 'package:shelf/shelf.dart';
 
-class TransactionController {
-  Response createTransaction(Request req, String id) {
-    req.readAsString().then((jsonString) {
-      final json = jsonDecode(jsonString);
-    });
+import '../application/create_transaction_usecase.dart';
 
-    return Response.ok('');
+class TransactionController {
+  final CreateTransactionUseCase createTransaction;
+
+  TransactionController({
+    required this.createTransaction,
+  });
+
+  Future<Response> createTransactionHandler(Request req, String id) async {
+    final body = jsonDecode(await req.readAsString());
+
+    final input = Input(
+      userId: int.parse(id),
+      value: body['value'],
+      type: body['type'],
+      description: body['description'],
+    );
+
+    final output = await createTransaction.execute(input);
+
+    return Response.ok(jsonEncode(output));
   }
 }
