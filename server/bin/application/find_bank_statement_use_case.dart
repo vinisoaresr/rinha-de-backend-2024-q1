@@ -1,14 +1,24 @@
 import '../domain/transaction.dart';
 import '../infra/datasources/transaction_repository.dart';
+import '../infra/datasources/user_repository.dart';
+import '../infra/exceptions/user_not_found_exception.dart';
 
 class FindBankStatementByUserUseCase {
   final TransactionRepository repository;
+  final UserRepository userRepository;
 
   FindBankStatementByUserUseCase({
     required this.repository,
+    required this.userRepository,
   });
 
   Future<Output> execute(Input input) async {
+    final user = await userRepository.findById(input.userId);
+
+    if (user == null) {
+      throw UserNotFoundException('Usuário não encontrado');
+    }
+
     final transactions = await repository.findByUser(input.userId);
 
     if (transactions.isEmpty) {
@@ -16,7 +26,7 @@ class FindBankStatementByUserUseCase {
         balance: OutputBalance(
           total: 0,
           statementDate: DateTime.now().toIso8601String(),
-          limit: 0,
+          limit: user.limit,
         ),
         transactions: [],
       );
@@ -28,7 +38,7 @@ class FindBankStatementByUserUseCase {
             .map((transaction) => transaction.value)
             .reduce((value, element) => value + element),
         statementDate: DateTime.now().toIso8601String(),
-        limit: 0,
+        limit: user.limit,
       ),
       transactions: transactions
           .map(

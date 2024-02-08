@@ -2,18 +2,36 @@ import 'dart:math';
 
 import '../domain/transaction.dart';
 import '../infra/datasources/transaction_repository.dart';
+import '../infra/datasources/user_repository.dart';
+import '../infra/exceptions/user_not_found_exception.dart';
 
 class CreateTransactionUseCase {
   final TransactionRepository repository;
+  final UserRepository userRepository;
 
   CreateTransactionUseCase({
     required this.repository,
+    required this.userRepository,
   });
 
   Future<Output> execute(Input input) async {
+    final user = await userRepository.findById(input.userId);
+
+    if (user == null) {
+      throw UserNotFoundException('Usuário não encontrado');
+    }
+
+    int nextBalance = input.type == 'c'
+        ? user.balance + input.value
+        : user.balance - input.value;
+
+    if (input.type == 'd' && nextBalance < -(user.limit)) {
+      throw InsufficientBalanceException('Saldo insuficiente');
+    }
+
     final transaction = Transaction(
       id: -(Random.secure().nextInt(1000)),
-      userId: input.userId,
+      userId: user.id,
       value: input.value,
       realizedAt: DateTime.now(),
       description: input.description,
@@ -21,12 +39,19 @@ class CreateTransactionUseCase {
     );
 
     final createdTransaction = await repository.save(transaction);
+    await userRepository.updateBalance(
+      user.id,
+      nextBalance,
+    );
 
-    if (createdTransaction != null) {
-      return Output(message: 'Transação realizada com sucesso');
-    } else {
-      return Output(message: 'Erro ao realizar transação', error: '500');
+    if (createdTransaction == null) {
+      throw Exception('Erro ao criar transação');
     }
+
+    return Output(
+      limit: user.limit,
+      balance: nextBalance,
+    );
   }
 }
 
@@ -42,21 +67,30 @@ class Input {
     required this.type,
     required this.description,
   });
+
+  factory Input.fromJson(Map<String, dynamic> json, String userId) {
+    return Input(
+      userId: int.parse(userId),
+      value: json['valor'],
+      type: json['tipo'],
+      description: json['descricao'],
+    );
+  }
 }
 
 class Output {
-  final String message;
-  final String? error;
+  final int limit;
+  final int balance;
 
   Output({
-    required this.message,
-    this.error,
+    required this.limit,
+    required this.balance,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'message': message,
-      'error': error,
+      'limite': limit,
+      'saldo': balance,
     };
   }
 }
