@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:postgres/postgres.dart';
 
@@ -57,6 +58,7 @@ class PgConnection {
       throw Exception('Failed when trying to connect to database');
     }
 
-    print('Connected to database: ${DateTime.parse(result[0][0].toString())}');
+    print(
+        'Thread: ${Isolate.current.debugName}-${Isolate.current.hashCode} Connected to database: ${DateTime.parse(result[0][0].toString())}');
   }
 }

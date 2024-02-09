@@ -1,5 +1,8 @@
+import 'dart:isolate';
+
 import '../../../application/repository/repository.dart';
 import '../../../domain/transaction.dart';
+import '../../../server.dart';
 import './pg_connection.dart';
 
 class PgTransactionRepository implements TransactionRepository {
@@ -9,8 +12,10 @@ class PgTransactionRepository implements TransactionRepository {
 
   @override
   Future<Transaction?> save(Transaction transaction) async {
-    var transactions = await conn.conn!.execute(
-        """INSERT INTO transactions (user_id, value, realized_at, type, description) VALUES (
+    var transactions = await connectionsPool[Isolate.current.hashCode]!
+        .conn!
+        .execute(
+            """INSERT INTO transactions (user_id, value, realized_at, type, description) VALUES (
               ${transaction.userId}, 
               ${transaction.value}, 
               '${transaction.realizedAt.toString()}', 
@@ -38,8 +43,10 @@ class PgTransactionRepository implements TransactionRepository {
 
   @override
   Future<List<Transaction>> findByUser(int userId) async {
-    var transactions = await conn.conn!.execute(
-        'SELECT * FROM transactions WHERE user_id = $userId ORDER BY realized_at DESC');
+    var transactions = await connectionsPool[Isolate.current.hashCode]!
+        .conn!
+        .execute(
+            'SELECT * FROM transactions WHERE user_id = $userId ORDER BY realized_at DESC');
 
     return transactions
         .map((t) => Transaction(

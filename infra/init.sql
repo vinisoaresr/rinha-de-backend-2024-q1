@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS "transactions" (
     FOREIGN KEY("user_id") REFERENCES "users"("id")
 );
 
+CREATE INDEX IF NOT EXISTS "transactions_user_id_index" ON "transactions" ("user_id");
+
 TRUNCATE TABLE users CASCADE;
 
 ALTER SEQUENCE users_id_seq RESTART WITH 1;

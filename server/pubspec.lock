@@ -153,6 +153,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  isolate:
+    dependency: "direct main"
+    description:
+      name: isolate
+      sha256: "3554ab10fdeec965d27e0074c913ccb2229887633da080d2b35a6322da14938b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.1"
   js:
     dependency: transitive
     description:
@@ -281,6 +289,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  shelf_docker_shutdown:
+    dependency: transitive
+    description:
+      name: shelf_docker_shutdown
+      sha256: d4c6292b25e4aaa3509c96d7fbde6b0d9928cc52608deb50b22d9d0c13bb8df5
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   shelf_packages_handler:
     dependency: transitive
     description:
@@ -294,6 +310,14 @@ packages:
     description:
       name: shelf_router
       sha256: "59f0d5a1bd29dbae10ad26f8df95141b5201dfbd220fc69bb9b2a2321c764ec9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  shelf_serve_isolates:
+    dependency: "direct main"
+    description:
+      name: shelf_serve_isolates
+      sha256: "7b4c46eb52e6f678f2adb35271619bfdda5b1bf5372cb7115af90c00178f6747"
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"

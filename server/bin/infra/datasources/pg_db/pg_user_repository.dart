@@ -1,16 +1,20 @@
+import 'dart:isolate';
+
 import '../../../application/repository/repository.dart';
 import '../../../domain/user.dart';
+import '../../../server.dart';
 import './pg_connection.dart';
 
 class PgUserRepository implements UserRepository {
-  final PgConnection conn;
+  final PgConnection conn = PgConnection();
 
-  PgUserRepository({required this.conn});
+  // PgUserRepository({required this.conn});
 
   @override
   Future<User?> findById(int id) async {
-    final users =
-        await conn.conn!.execute('SELECT * FROM users WHERE id = $id');
+    final users = await connectionsPool[Isolate.current.hashCode]!
+        .conn!
+        .execute('SELECT * FROM users WHERE id = $id');
 
     if (users.isEmpty) {
       return null;
@@ -28,7 +32,9 @@ class PgUserRepository implements UserRepository {
   @override
   Future updateBalance(int id, int nextBalance) async {
     return Future.value(() async {
-      var users = await conn.conn!.execute("""UPDATE users 
+      var users = await connectionsPool[Isolate.current.hashCode]!
+          .conn!
+          .execute("""UPDATE users 
                                               SET balance = $nextBalance 
                                               WHERE id = $id 
                                               RETURNING *

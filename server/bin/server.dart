@@ -1,7 +1,8 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:shelf/shelf.dart';
-import 'package:shelf/shelf_io.dart';
+import 'package:shelf_serve_isolates/shelf_serve_isolates.dart';
 
 import 'application/create_transaction_usecase.dart';
 import 'application/find_bank_statement_use_case.dart';
@@ -13,44 +14,68 @@ import 'infra/datasources/pg_db/pg_data_sources.dart';
 import 'infra/utils/registry.dart';
 import 'infra/utils/routes.dart';
 
-void main(List<String> args) async {
-  final handler = init();
+// Tive que criar um pool de conexões para cada isolate usando o hash do isolate como chave (não é uma boa prática, but it works)
+Map<int, PgConnection> connectionsPool = {};
 
+void main(List<String> args) async {
+  init();
+
+  final handler = getHandler();
   final port = int.parse(Platform.environment['PORT'] ?? '9999');
 
-  final ip = InternetAddress.anyIPv4;
+  await ServeWithMultiIsolates(
+    handler: handler,
+    address: 'localhost',
+    port: port,
+    onStart: (server) {
+      connectionsPool[Isolate.current.hashCode] = PgConnection();
+      print(
+        'Serving at http://${server.address.host}:${server.port} ${Isolate.current.debugName}-${Isolate.current.hashCode}',
+      );
+    },
+    onClose: (server) {
+      print('server shutdown');
+    },
+  ).serve();
 
-  final server = await serve(
-    handler,
-    ip,
-    port,
-    shared: true,
-  );
+  // final server = await serve(
+  //   handler,
+  //   ip,
+  //   port,
+  //   shared: true,
+  // );
 
-  print('Server listening on ${ip.address}:${server.port}');
+  // print('Server listening on ${ip.address}:${server.port}');
 }
 
-init() {
-  initDependencies();
+getHandler() {
+  final handler = Pipeline().addMiddleware(
+    logRequests(
+      logger: (String msg, bool isError) {
+        msg =
+            'Thread: ${Isolate.current.debugName}-${Isolate.current.hashCode} - $msg';
 
-  final handler = Pipeline()
-      .addMiddleware(
-        logRequests(),
-      )
-      .addHandler(
-        Routes().router,
-      );
+        if (isError) {
+          print('ERROR: $msg');
+        } else {
+          print(msg);
+        }
+      },
+    ),
+  ).addHandler(
+    Routes().router,
+  );
 
   return handler;
 }
 
-initDependencies() {
+init() {
   // infra
   var pgConnection = PgConnection();
 
   // repositories
   var transactionRepository = PgTransactionRepository(conn: pgConnection);
-  var userRepository = PgUserRepository(conn: pgConnection);
+  var userRepository = PgUserRepository();
 
   // use cases
   var createTransactionUseCase = CreateTransactionUseCase(
