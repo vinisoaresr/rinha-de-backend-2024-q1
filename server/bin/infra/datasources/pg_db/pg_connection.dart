@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:postgres/postgres.dart';
@@ -20,20 +19,28 @@ class PgConnection {
   Connection? conn;
 
   void openConnection() async {
+    final host = Platform.environment['DB_HOST'] ?? 'localhost';
+    final port = int.parse(Platform.environment['DB_PORT'] ?? '5432');
+    final database = 'rinha';
+    final username = 'admin';
+    final password = '123';
+
+    print('Connecting to database: $host:$port/$database');
+
     try {
       conn = await Connection.open(
         Endpoint(
-          host: Platform.environment['DB_HOST'] ?? 'localhost',
-          database: 'rinha',
-          username: 'admin',
-          password: '123',
-          port: int.parse(Platform.environment['DB_PORT'] ?? '5444'),
+          host: host,
+          database: database,
+          username: username,
+          password: password,
+          port: port,
         ),
         settings: ConnectionSettings(
           sslMode: SslMode.disable,
         ),
       );
-    } on SocketException catch (e) {
+    } on SocketException catch (_) {
       sleep(Duration(seconds: 5));
       openConnection();
     } catch (e) {
@@ -44,10 +51,12 @@ class PgConnection {
   }
 
   testConnection() async {
-    final result = await conn!.execute('SELECT 1');
+    final result = await conn!.execute('SELECT now()');
 
     if (result.isEmpty) {
       throw Exception('Failed when trying to connect to database');
     }
+
+    print('Connected to database: ${DateTime.parse(result[0][0].toString())}');
   }
 }

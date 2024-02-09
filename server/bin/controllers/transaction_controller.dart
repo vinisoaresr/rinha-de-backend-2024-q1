@@ -26,9 +26,7 @@ class TransactionController {
     } on InsufficientBalanceException catch (e) {
       return Response(422, body: jsonEncode({'message': e.message}));
     } catch (e) {
-      return Response.internalServerError(
-        body: jsonEncode({'message': e.toString()}),
-      );
+      return Response(422, body: jsonEncode({'message': e.toString()}));
     }
 
     return Response.ok(jsonEncode(output));

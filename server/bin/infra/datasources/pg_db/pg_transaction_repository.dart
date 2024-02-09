@@ -10,25 +10,27 @@ class PgTransactionRepository implements TransactionRepository {
   @override
   Future<Transaction?> save(Transaction transaction) async {
     var transactions = await conn.conn!.execute(
-        """INSERT INTO transactions (user_id, value, created_at, type, description) VALUES (
+        """INSERT INTO transactions (user_id, value, realized_at, type, description) VALUES (
               ${transaction.userId}, 
               ${transaction.value}, 
-              ${transaction.realizedAt}, 
-              ${transaction.type}, 
-              ${transaction.description}) 
-            RETURNING *""");
+              '${transaction.realizedAt.toString()}', 
+              '${transaction.type == TransactionType.credit ? 'c' : 'd'}', 
+              '${transaction.description}'
+        ) RETURNING *""");
 
     if (transactions.isEmpty) {
       return null;
     }
 
+    final createdTransaction = transactions[0];
+
     return Transaction(
-      id: transactions[0][0] as int,
-      userId: transactions[0][1] as int,
-      value: transactions[0][2] as int,
-      description: transactions[0][3] as String,
-      realizedAt: transactions[0][4] as DateTime,
-      type: transactions[0][5] as String == 'c'
+      id: createdTransaction[0] as int,
+      userId: createdTransaction[1] as int,
+      value: createdTransaction[2] as int,
+      description: createdTransaction[3] as String,
+      realizedAt: DateTime.parse(createdTransaction[4] as String),
+      type: createdTransaction[5] as String == 'c'
           ? TransactionType.credit
           : TransactionType.debit,
     );
@@ -36,8 +38,8 @@ class PgTransactionRepository implements TransactionRepository {
 
   @override
   Future<List<Transaction>> findByUser(int userId) async {
-    var transactions = await conn.conn!
-        .execute('SELECT * FROM transactions WHERE user_id = $userId');
+    var transactions = await conn.conn!.execute(
+        'SELECT * FROM transactions WHERE user_id = $userId ORDER BY realized_at DESC');
 
     return transactions
         .map((t) => Transaction(
@@ -45,7 +47,8 @@ class PgTransactionRepository implements TransactionRepository {
               userId: t[1] as int,
               value: t[2] as int,
               description: t[3] as String,
-              realizedAt: t[4] as DateTime,
+              // realizedAt: DateTime.parse(t[4] as String),
+              realizedAt: DateTime.now(),
               type: t[5] as String == 'c'
                   ? TransactionType.credit
                   : TransactionType.debit,

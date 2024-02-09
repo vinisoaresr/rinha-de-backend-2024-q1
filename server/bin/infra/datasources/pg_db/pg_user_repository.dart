@@ -9,16 +9,19 @@ class PgUserRepository implements UserRepository {
 
   @override
   Future<User?> findById(int id) async {
-    var users = await conn.conn!.execute('SELECT * FROM users WHERE id = $id');
+    final users =
+        await conn.conn!.execute('SELECT * FROM users WHERE id = $id');
 
     if (users.isEmpty) {
       return null;
     }
 
+    final user = users.first;
+
     return User(
-      id: users[0][0] as int,
-      balance: users[0][1] as int,
-      limit: users[0][2] as int,
+      id: user[0] as int,
+      limit: user[1] as int,
+      balance: user[2] as int,
     );
   }
 
@@ -40,6 +43,6 @@ class PgUserRepository implements UserRepository {
         balance: users[0][1] as int,
         limit: users[0][2] as int,
       );
-    });
+    }());
   }
 }

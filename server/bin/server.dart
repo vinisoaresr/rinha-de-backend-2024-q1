@@ -8,8 +8,8 @@ import 'application/find_bank_statement_use_case.dart';
 import 'application/repository/repository.dart';
 import 'controllers/bank_statement_controller.dart';
 import 'controllers/transaction_controller.dart';
-import 'infra/datasources/in_memory/in_memory_data_sources.dart';
 import 'infra/datasources/pg_db/pg_connection.dart';
+import 'infra/datasources/pg_db/pg_data_sources.dart';
 import 'infra/utils/registry.dart';
 import 'infra/utils/routes.dart';
 
@@ -20,7 +20,12 @@ void main(List<String> args) async {
 
   final ip = InternetAddress.anyIPv4;
 
-  final server = await serve(handler, ip, port);
+  final server = await serve(
+    handler,
+    ip,
+    port,
+    shared: true,
+  );
 
   print('Server listening on ${ip.address}:${server.port}');
 }
@@ -41,11 +46,11 @@ init() {
 
 initDependencies() {
   // infra
-  // var pgConnection = PgConnection();
+  var pgConnection = PgConnection();
 
   // repositories
-  var transactionRepository = InMemoryTransactionRepository();
-  var userRepository = InMemoryUserRepository();
+  var transactionRepository = PgTransactionRepository(conn: pgConnection);
+  var userRepository = PgUserRepository(conn: pgConnection);
 
   // use cases
   var createTransactionUseCase = CreateTransactionUseCase(
@@ -82,7 +87,7 @@ initDependencies() {
   Registry().register<BankStatementController>(
     bankStatementController,
   );
-  // Registry().register<PgConnection>(
-  //   pgConnection,
-  // );
+  Registry().register<PgConnection>(
+    pgConnection,
+  );
 }

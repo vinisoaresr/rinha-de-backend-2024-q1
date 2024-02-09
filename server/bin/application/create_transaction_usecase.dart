@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import '../domain/transaction.dart';
+import './repository/repository.dart';
 import 'exceptions/insufficient_balance_exception.dart';
 import 'exceptions/user_not_found_exception.dart';
-import './repository/repository.dart';
 
 class CreateTransactionUseCase {
   final TransactionRepository repository;
@@ -15,6 +15,8 @@ class CreateTransactionUseCase {
   });
 
   Future<Output> execute(Input input) async {
+    input.validate();
+
     final user = await userRepository.findById(input.userId);
 
     if (user == null) {
@@ -69,12 +71,46 @@ class Input {
   });
 
   factory Input.fromJson(Map<String, dynamic> json, String userId) {
+    int value;
+
+    switch (json['valor'].runtimeType) {
+      case int:
+        value = json['valor'];
+        break;
+      case double:
+        value = (json['valor'] as double).toInt();
+        break;
+      case String:
+        int.tryParse(json['valor']) != null
+            ? value = int.parse(json['valor'])
+            : double.tryParse(json['valor']) != null
+                ? value = double.parse(json['valor']).toInt()
+                : value = -1;
+        break;
+      default:
+        value = -1;
+    }
+
     return Input(
       userId: int.parse(userId),
-      value: json['valor'],
-      type: json['tipo'],
-      description: json['descricao'],
+      value: value,
+      type: json['tipo'] ?? '',
+      description: json['descricao'] ?? '',
     );
+  }
+
+  void validate() {
+    if (value <= 0) {
+      throw Exception('Valor inválido');
+    }
+
+    if (type != 'c' && type != 'd') {
+      throw Exception('Tipo inválido');
+    }
+
+    if (description.isEmpty || description.length > 10) {
+      throw Exception('Descrição inválida');
+    }
   }
 }
 
